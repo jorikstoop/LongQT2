@@ -186,10 +186,9 @@ void TP06::update()
 	double Kbufss = 0.00025;
 
 	//Intracellular calcium flux dynamics
-#ifdef EAD
-	double Vmaxup = 0.003825; //MODIFIED -40%
-#else
 	double Vmaxup = 0.006375;
+#ifdef EAD
+	Vmaxup = 0.6*Vmaxup; //MODIFIED -40%
 #endif
 	double Kup = 0.00025;
 	double Vrel = 0.102;
@@ -268,8 +267,10 @@ void TP06::update()
 	double knak = 2.724;
 	
   	//Parameters for ICaL
-	//double GCaL = 0.00003980; //original
-	double GCaL = 0.00003980 * (2.2); // modified
+	double GCaL = 0.00003980;
+#ifdef EAD
+	GCaL = 2.2*GCaL; // MODIFIED
+#else
 	
   	//Parameters for IbCa
 	double GbCa = 0.000592;
@@ -629,8 +630,10 @@ void TP06::update()
     Af=1102.5*exp(-(svolt+27)*(svolt+27)/225);
     Bf=200./(1+exp((13-svolt)/10.));
     Cf=(180./(1+exp((svolt+30)/10)))+20;
-    //TAU_F=Af+Bf+Cf; //original
-	TAU_F=(Af+Bf+Cf)/2.2; //ICaL fast inactivation MODIFIED to be half of original
+    TAU_F=Af+Bf+Cf; //original
+#ifdef EAD
+	TAU_F = TAU_F/2.2; //ICaL fast inactivation MODIFIED
+#endif
     F2_INF=0.67/(1.+exp((svolt+35)/7))+0.33;
     Af2=600*exp(-(svolt+25)*(svolt+25)/170);
     Bf2=31/(1.+exp((25-svolt)/10));
