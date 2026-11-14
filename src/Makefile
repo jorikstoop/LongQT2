@@ -12,18 +12,19 @@ common = TP06.cc  Cell.cc
 
 CC = g++
 CFLAGS = -std=c++17 -O3 -w #-g:warning output to screen   -w:warning ignored
-OMPFLAGS = -fopenmp
+LDFLAGS  += -L/opt/homebrew/opt/libomp/lib -lomp
+OMPFLAGS = -Xpreprocessor -fopenmp -I/opt/homebrew/opt/libomp/include
 
 SingleCell: $(common) SingleCell.cc
-	$(CC) $(CFLAGS) -o model_single_cell $(common) SingleCell.cc
+	$(CC) $(CFLAGS) $(OMPFLAGS) $(LDFLAGS) -o model_single_cell $(common) SingleCell.cc
 
 Initialization: $(common) Initialization.cc
-	$(CC) $(CFLAGS) -o model_initialization $(common) Initialization.cc
+	$(CC) $(CFLAGS) $(OMPFLAGS) $(LDFLAGS) -o model_initialization $(common) Initialization.cc
 
 OneD: $(common) OneD.cc
-	$(CC) $(CFLAGS) $(OMPFLAGS) -o model_oned $(common) OneD.cc
+	$(CC) $(CFLAGS) $(OMPFLAGS) $(LDFLAGS) -o model_oned $(common) OneD.cc
 
 clean:
-	del model_*
+	rm model_*
 
 # Note: use rm model_* for Unix but del model_* for windows
