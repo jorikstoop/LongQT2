@@ -270,7 +270,7 @@ void TP06::update()
 	double GCaL = 0.00003980;
 #ifdef EAD
 	GCaL = 2.2*GCaL; // MODIFIED
-#else
+#endif
 	
   	//Parameters for IbCa
 	double GbCa = 0.000592;
