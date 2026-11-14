@@ -165,10 +165,10 @@ void TP06::update()
 	//External concentrations
 	double Ko = 5.4;
 
-	#ifdef K_supplement
-		// ref = https://doi.org/10.1016/j.jacc.2003.07.006
-		Ko = 5.4*1.3;
-	#endif
+#ifdef K_supplement
+	// ref = https://doi.org/10.1016/j.jacc.2003.07.006
+	Ko = 5.4*1.3;
+#endif
 	double Cao = 2.0;
 	double Nao = 140.0;
 
@@ -186,8 +186,11 @@ void TP06::update()
 	double Kbufss = 0.00025;
 
 	//Intracellular calcium flux dynamics
-	//double Vmaxup = 0.006375; //original 
-	double Vmaxup = 0.003825; //modified -40% from original
+#ifdef EAD
+	double Vmaxup = 0.003825; //MODIFIED -40%
+#else
+	double Vmaxup = 0.006375;
+#endif
 	double Kup = 0.00025;
 	double Vrel = 0.102;
 	double k1_ = 0.15;
@@ -215,36 +218,32 @@ void TP06::update()
 
 	//Parameters for currents
 	//Parameters for IKr
-	double Gkr; 
-	#if defined WT || defined R56Q
-	//Gkr =  0.0135*pow(Ko,0.59);		// original from Clancy Rudy 2001
-	Gkr =  (1.5)*0.0135*pow(Ko,0.59);	// MODIFIED +50% from original
+	double Gkr = 0.0135*pow(Ko,0.59);	// from Clancy Rudy 2001
+#ifdef T474I
+	Gkr = 0.65*Gkr;	// from Clancy Rudy 2001, 35% reduction compare to WT
+#endif
+#ifdef EAD
+	Gkr = 1.5*Gkr;	// MODIFIED +50%
+#endif
 	if(ctype == EPI)
 		Gkr = 1.2*Gkr;
-	#endif
-
-    #if defined T474I
-	//Gkr =  (0.65)*0.0135*pow(Ko,0.59);		// original from Clancy Rudy 2001, 35% reduction compare to WT
-	Gkr =  (0.65)*(1.5)*0.0135*pow(Ko,0.59);	// MODIFIED +50% from original, 35% reduction compared to WT
-	if(ctype == EPI)
-		Gkr = 1.2*Gkr;
-	#endif
 
 	//Parameters for Iks
 	double pKNa = 0.03;
 	double Gks;
 	if(ctype == MCELL){
-		//Gks = 0.098; //original
-		Gks = 0.0392; // MODIFIED -60% FROM ORIGINAL
+		Gks = 0.098;
+	} else{
+		// EPI & ENDO
+		Gks = 0.392;
 	}
-	else{ // EPI & ENDO
-		//Gks = 0.392; // Original
-		Gks = 0.392*0.4; // Modified to -60% of original
-	}
+#ifdef EAD
+	Gks = 0.4*Gks;	// MODIFIED -60% FROM ORIGINAL
+#endif
 	//Parameters for Ik1
 	double GK1 = 5.405;
 	
-  //Parameters for Ito
+  	//Parameters for Ito
 	double Gto;
 	if(ctype == ENDO) 
 		Gto = 0.073;
@@ -252,41 +251,41 @@ void TP06::update()
 		Gto = 0.294;
 
 
-  //Parameters for INa
+  	//Parameters for INa
 	double GNa = 14.838;
 	
-  // INaL from ORd model
+  	// INaL from ORd model
 	double GNaL = 0.0075;
 	if (ctype == EPI)  
 		GNaL*=0.6;
 	
-  //Parameters for IbNa
+  	//Parameters for IbNa
 	double GbNa = 0.00029;
 	
-  //Parameters for INaK
+  	//Parameters for INaK
 	double KmK = 1.0;
 	double KmNa = 40.0;
 	double knak = 2.724;
 	
-  //Parameters for ICaL
+  	//Parameters for ICaL
 	//double GCaL = 0.00003980; //original
 	double GCaL = 0.00003980 * (2.2); // modified
 	
-  //Parameters for IbCa
+  	//Parameters for IbCa
 	double GbCa = 0.000592;
 	
-  //Parameters for INaCa
+  	//Parameters for INaCa
 	double knaca = 1000;
 	double KmNai = 87.5;
 	double KmCa = 1.38;
 	double ksat = 0.1;
 	double n = 0.35;
 	
-  //Parameters for IpCa
+  	//Parameters for IpCa
 	double GpCa = 0.1238;
 	double KpCa = 0.0005;
 	
-  //Parameters for IpK;
+  	//Parameters for IpK;
 	double GpK = 0.0146;
 
 	// current	
@@ -377,18 +376,18 @@ void TP06::update()
 	static char s[200];
 	FILE *FF;
 
-	#ifdef ISO_10nM
-		// ref = https://doi.org/10.1111/j.1469-7793.2000.t01-2-00391.x
-		// and https://doi.org/10.1111/j.1476-5381.2012.02015.x
-		amp_ikr = 1.8;
-		amp_iks = 2.3;
-		amp_ica = 1.6;
-	#endif
+#ifdef ISO_10nM
+	// ref = https://doi.org/10.1111/j.1469-7793.2000.t01-2-00391.x
+	// and https://doi.org/10.1111/j.1476-5381.2012.02015.x
+	amp_ikr = 1.8;
+	amp_iks = 2.3;
+	amp_ica = 1.6;
+#endif
 
-	#ifdef Verapamil_300nM
-		// ref = https://doi.org/10.1007/PL00004921
-		amp_ica = 1.17*exp(-9*BCL/10000);
-	#endif
+#ifdef Verapamil_300nM
+	// ref = https://doi.org/10.1007/PL00004921
+	amp_ica = 1.17*exp(-9*BCL/10000);
+#endif
 
     //Needed to compute currents
     Ek = RTONF*(log((Ko/Ki)));
@@ -521,7 +520,7 @@ void TP06::update()
     I_o = I;
     O_o = O;
 
-    #if defined WT
+#ifdef WT
 	// markov parameter values from Clancy-Rudy 2001
     a_1 = 2.172; //a_in
     b_1 = 1.077; //b_in
@@ -532,9 +531,9 @@ void TP06::update()
     a = 0.0555*exp(0.05547153*(svolt-12));
     b = 0.002357*exp(-0.036588*svolt);
     u = (a_i*b_2)/b_i;
-    #endif
+#endif
 
-	#if defined T474I
+#ifdef T474I
 	// markov parameter values from Clancy-Rudy 2001
     a_1 = 2.172; //a_in
     b_1 = 1.077; //b_in
@@ -545,9 +544,9 @@ void TP06::update()
     a = 0.0555*exp(0.05547153*(svolt+6)); //mutated
     b = 0.002357*exp(-0.036588*svolt);
     u = (a_i*b_2)/b_i;
-	#endif
+#endif
 
-	#if defined R56Q
+#ifdef R56Q
     // markov parameter values from Clancy-Rudy 2001
 	a_1 = 2.172; //a_in
     b_1 = 1.077; //b_in
@@ -558,7 +557,7 @@ void TP06::update()
     a = 0.0555*exp(0.05547153*(svolt-12)); 
     b = (10.5)*0.002357*exp(-0.036588*svolt); //mutated
     u = (a_i*b_2)/b_i;
-	#endif
+#endif
 
     // outward branches forming a coefficient for each state
     const double co_C1 = 1./(1+dt*a);
