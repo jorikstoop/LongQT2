@@ -24,6 +24,9 @@ using namespace std;
 // #define K_supplement     // spironolactone
 // #define Verapamil_300nM  // verapamil (Calcium channel blocker)
 
+// Choose whether to alter parameters to enable EADs in 1D cable
+#define EAD
+
 // Define cycle length as global variable
 inline constexpr double BCL = 750.0;    // ms
 
