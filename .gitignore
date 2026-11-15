@@ -4,4 +4,8 @@
 *.dat
 model_*
 *.png
+*.gif
+*.mov
+*.mp4
 .DS_Store
+__pycache__

@@ -10,7 +10,7 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import re
+from helpers import get_cl, get_label
 
 ###########  USER OPTIONS ################
 PLOT_AP = True
@@ -18,37 +18,6 @@ PLOT_IKR = True
 PLOT_MARKOV_STATES = True
 PLOT_ALL = True
 ##########################################
-
-# helper functions to extract info from filename
-def get_cl(filename):
-    """Extract cycle length from filename"""
-    match = re.search(r"(?:^|_)CL_(\d+(?:\.\d+)?)(?=_|$)",
-                      Path(filename).stem,
-                     flags=re.IGNORECASE)
-    if not match:
-        raise ValueError(f"Missing CL value in filename: {filename}")
-    return float(match.group(1))
-
-
-def get_label(filename):
-    """Extract model and treatment(s) from filename"""
-    tokens = Path(filename).stem.upper().split("_")
-    model = next((token for token in tokens
-                  if token in {"WT", "T474I", "R56Q"}),
-                  "")
-    treatment_names = {
-        "ISO": "Isoproterenol",
-        "KSUPP": "K+_supplement",
-        "VERA": "Verapamil",
-        "NODRUG": "No_drug",
-    }
-    treatments = [treatment_names[token]
-                  for token in tokens
-                  if token in treatment_names]
-    if not treatments:
-        raise ValueError(f"Missing treatment tag in filename: {filename}")
-    treatment = "+".join(treatments)
-    return f"{model}—{treatment}" if model else treatment
 
 # read files
 file1 = sys.argv[1] if len(sys.argv) > 1 else input('Enter file1 path: ').strip()
@@ -58,6 +27,8 @@ data2 = np.loadtxt(file2, ndmin=2)
 if data1.shape[1] != 9 or data2.shape[1] != 9:
     raise ValueError('Each file must contain t, v, IKr, ICaL, C1, C2, C3, I, O')
 # extract data
+CL1 = get_cl(file1)
+CL2 = get_cl(file2)
 t, v1, IKr1, ICaL1, closed11, closed21, closed31, inactivated1, open1 = data1.T
 t2, v2, IKr2, ICaL2, closed12, closed22, closed32, inactivated2, open2 = data2.T
 # sum closed states
@@ -68,8 +39,6 @@ labels = [get_label(file1), get_label(file2)]
 
 if PLOT_AP:
     # plot first cycle
-    CL1 = get_cl(file1)
-    CL2 = get_cl(file2)
     mask = t < CL1
     mask2 = t2 < CL2
     plt.figure(num=1)
@@ -91,10 +60,7 @@ if PLOT_IKR:
         ax.set_xlabel('Time (ms)')
     # make legend
     handles, legend_labels = axes[0].get_legend_handles_labels()
-    fig.legend(
-        handles, legend_labels,
-        loc='lower center', ncol=2, frameon=False,
-    )
+    fig.legend(handles, legend_labels, loc='lower center', ncol=2, frameon=False)
     fig.tight_layout(rect=[0, 0.10, 1, 1])
 
 if PLOT_MARKOV_STATES:
@@ -119,8 +85,7 @@ if PLOT_MARKOV_STATES:
         if state_handles is None:
             state_handles = [open_line, closed_line, inactive_line]
     # add legend
-    fig.legend(handles=state_handles,
-               loc='lower center', ncol=3, frameon=False)
+    fig.legend(handles=state_handles, loc='lower center', ncol=3, frameon=False)
 
 
 if PLOT_ALL:
@@ -138,8 +103,7 @@ if PLOT_ALL:
     axes[-1].set_xlabel('Time (ms)')
     # create legend
     handles, legend_labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, legend_labels,
-               loc='lower center', ncol=1, frameon=False)
+    fig.legend(handles, legend_labels, loc='lower center', ncol=1, frameon=False)
     fig.tight_layout(rect=[0, 0.06, 1, 1])
 
 # save figure
